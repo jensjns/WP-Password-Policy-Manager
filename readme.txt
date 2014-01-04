@@ -8,5 +8,10 @@ Sets up policies for Wordpress passwords.
 
 == Changelog ==
 
-= 0.1 =
+= 1.0.2 =
+* Moved JS to script file
+* Makes use of WP jQuery
+* Works with intranet-restricted/offline WP
+* Login / password change auditing fixed
+= 1.0.1 =
 * Initial release

@@ -3,7 +3,7 @@
 /*
 Plugin Name: WpPasswordPolicyManager
 Description: Sets up policies for Wordpress passwords.
-Version: 1.0.0
+Version: 1.0.2
 */
 
 class WpPasswordPolicyManager {
