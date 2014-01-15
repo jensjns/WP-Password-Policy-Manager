@@ -1,9 +1,29 @@
 <?php
 
 /*
-Plugin Name: WpPasswordPolicyManager
-Description: Sets up policies for Wordpress passwords.
-Version: 1.0.2
+Plugin Name: WordPress Password Policy Manager
+Plugin URI: http://www.wpwhitesecurity.com/wordpress-security-plugins/wordpress-password-policy-manager-plugin/
+Description: WordPress Password Policy Manager allows WordPress administrators to configure password policies for WordPress users to use strong passwords.
+Author: WP White Security
+Version: 0.1
+Author URI: http://www.wpwhitesecurity.com/
+License: GPL2
+
+    WordPress Password Policy Manager
+    Copyright(c) 2014  Robert Abela  (email : robert@wpwhitesecurity.com)
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License, version 2, as
+    published by the Free Software Foundation.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
 class WpPasswordPolicyManager {
@@ -133,7 +153,7 @@ class WpPasswordPolicyManager {
 		
 		// display settings page
 		?><div class="wrap">
-			<h2><?php echo __( 'Menu Test Plugin Settings'); ?></h2>
+			<h2><?php echo __( 'WordPress Password Policy Manager Settings'); ?></h2>
 			<form method="post" action="">
 				<table class="form-table">
 					<tbody>
