@@ -5,7 +5,7 @@ Plugin Name: WordPress Password Policy Manager
 Plugin URI: http://www.wpwhitesecurity.com/wordpress-security-plugins/wordpress-password-policy-manager-plugin/
 Description: WordPress Password Policy Manager allows WordPress administrators to configure password policies for WordPress users to use strong passwords.
 Author: WP White Security
-Version: 0.1
+Version: 0.2
 Author URI: http://www.wpwhitesecurity.com/
 License: GPL2
 
@@ -34,7 +34,8 @@ class WpPasswordPolicyManager {
 	
 	const OPT_NAME_TTL = 'wppm_ttl_str';
 	const OPT_NAME_UPM = 'wppm_passmod';
-	const DEF_TTL      = '10 days';
+	const OPT_NAME_LEN = 'wppm_len_int';
+	const DEF_TTL      = '';
 	const DEF_PFX      = 'wppm';
 	
 	// <editor-fold desc="Entry Points">
@@ -90,13 +91,22 @@ class WpPasswordPolicyManager {
 	}
 	
 	/**
+	 * @return integer Password length policy.
+	 */
+	public function GetPasswordLen(){
+		return (int)get_option(self::OPT_NAME_LEN, 0);
+	}
+	
+	/**
 	 * Set new password time-to-live.
 	 * @param string $newTtl Password policy time to live as a string.
 	 */
 	public function SetPasswordTtl($newTtl){
-		$time = strtotime($newTtl);
-		if($time === false || $time < time())
-			throw new Exception('Password policy expiration time is not valid.');
+		if(trim($newTtl)){
+			$time = strtotime($newTtl);
+			if($time === false || $time < time())
+				throw new Exception('Password policy expiration time is not valid.');
+		}else $newTtl = '';
 		update_option(self::OPT_NAME_TTL, $newTtl);
 	}
 	
@@ -106,7 +116,9 @@ class WpPasswordPolicyManager {
 	 * @return boolean True if old, false otherwise.
 	 */
 	public function IsPasswordOld($setTime){
-		return strtotime($this->GetPasswordTtl(), $setTime) <= time();
+		$ttl = $this->GetPasswordTtl();
+		if(!trim($ttl))return false;
+		return strtotime($ttl, $setTime) <= time();
 	}
 	
 	/**
@@ -158,11 +170,27 @@ class WpPasswordPolicyManager {
 				<table class="form-table">
 					<tbody>
 						<tr valign="top">
-							<th scope="row"><label for="admin_email"><?php _e('Password Expiration Policy'); ?>  </label></th>
+							<th scope="row"><label for="<?php echo self::DEF_PFX.'_ttl'; ?>"><?php _e('Password Expiration Policy'); ?></label></th>
 							<td>
 								<input type="text" id="<?php echo self::DEF_PFX.'_ttl'; ?>" name="<?php echo self::DEF_PFX.'_ttl'; ?>"
 									   value="<?php echo esc_attr($this->GetPasswordTtl()); ?>" size="20" class="regular-text ltr">
 								<p class="description">Examples: <code>5 days</code> <code>20 days 6 hours</code> <code>3 weeks</code></p>
+								Leave blank to disable Password Expiry policy
+							</td>
+						</tr>
+						<tr valign="top">
+							<th scope="row"><label for="<?php echo self::DEF_PFX.'_len'; ?>"><?php _e('Password Length Policy'); ?></label></th>
+							<td>
+								<select type="text" id="<?php echo self::DEF_PFX.'_len'; ?>" name="<?php echo self::DEF_PFX.'_len'; ?>"><?php
+									$curr = $this->GetPasswordLen();
+									foreach(array_merge(array(0), range(4, 16)) as $value){
+										$sel = ($value == $curr) ? ' selected="selected"' : '';
+										?><option value="<?php echo $value; ?>"<?php echo $sel; ?>>
+											<?php echo ($value == 0 ? '' : $value); ?>
+										</option><?php
+									}
+								?></select> characters<br/>
+								Leave blank to disable Password Length policy
 							</td>
 						</tr>
 					</tbody>
@@ -255,7 +283,7 @@ class WpPasswordPolicyManager {
 	}
 	
 	public function admin_menu(){
-		add_options_page('Password Policy', 'Password Policy', 'manage_options', 'password_policy_settings', array($this, 'ManageWpOptions'));
+		add_options_page('Password Policies', 'Password Policies', 'manage_options', 'password_policy_settings', array($this, 'ManageWpOptions'));
 	}
 	
 	// </editor-fold>
