@@ -76,8 +76,9 @@ If a WordPress user's password is expired, the user will be notified and asked t
 == Changelog ==
 
 
-= 0.4 (2014-??-??) =
-* TBD
+= 0.4 (2014-12-1) =
+* **Bug Fix**
+	* Fixed an issue where the password was not being reset properly when changed by the admin on a user's profile page
 
 
 = 0.3 (2014-11-24) =
