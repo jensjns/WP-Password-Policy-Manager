@@ -136,6 +136,9 @@ class WpPasswordPolicyManager
             if(empty($username)){
                 return;
             }
+            if (!username_exists($username)) {
+                return;
+            }
         }
 
         if(!empty($this->pwd)){
@@ -153,11 +156,12 @@ class WpPasswordPolicyManager
             // policies do not apply in this case
             return;
         }
+        if(!wp_check_password($password, $user->data->user_pass, $user->ID)){
+            // let WP handle this
+            return;
+        }
         if(!$this->IsUserPasswordOld($user)){
-            if(!wp_check_password($password, $user->data->user_pass, $user->ID)){
-                // let WP handle this
-                return;
-            }
+            return;
         }
         ?>
         <p>
@@ -376,13 +380,6 @@ class WpPasswordPolicyManager
                 }
                 else {self::ClearUserPrevPwds($user->ID); }
 
-                // if this is not own profile - reset & expire pwd
-//                $crtUserID = get_current_user_id();
-//                if($crtUserID != $user->ID){
-//                    $this->SetGlobalOption(self::OPT_USER_RST_PWD . '_' . $user->ID, true);
-//                    update_user_option($user->ID, self::OPT_NAME_UPM, current_time('timestamp'));
-//                }
-                //----
                 $this->SetGlobalOption(self::OPT_USER_RST_PWD . '_' . $user->ID, false);
                 update_user_option($user->ID, self::OPT_NAME_UPM, current_time('timestamp')+(strtotime($this->GetPasswordTtl())));
             }
