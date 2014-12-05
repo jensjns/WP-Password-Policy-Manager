@@ -43,6 +43,7 @@ class WpPasswordPolicyManager
     const POLICY_MIXCASE = 'C';
     const POLICY_NUMBERS = 'N';
     const POLICY_SPECIAL = 'S';
+    const POLICY_OLDPASSWORD = 'O';
     const DEF_OPT_TTL = '';
     const DEF_OPT_LEN = 0;
     const DEF_OPT_CPT = false;
@@ -266,6 +267,15 @@ class WpPasswordPolicyManager
         $rules = $this->GetPasswordRules();
         ?>
         <table class="form-table">
+            <?php if($this->IsPolicyEnabled(self::POLICY_OLDPASSWORD)) { ?>
+            <tr>
+                <th><label for="wppmoldpass"><?php _e('Old Password') ;?></label></th>
+                <td>
+                    <input type="password" name="wppmoldpass" id="wppmoldpass" class="regular-text" size="16" value="" autocomplete="off"><br>
+                    <span class="description"><?php _e('Type your old password to be able to change your password.'); ?></span>
+                </td>
+            </tr>
+            <?php } ?>
             <tr>
                 <th><label><?php _e('New password must') ;?></label></th>
                 <td>
@@ -289,7 +299,8 @@ class WpPasswordPolicyManager
     public function ValidateUserProfilePage($errors, $update = null, $user = null){
         $pass1 = (isset($_REQUEST['pass1']) ? $_REQUEST['pass1'] : '');
         $pass2 = (isset($_REQUEST['pass2']) ? $_REQUEST['pass2'] : '');
-        return $this->__validateProfile($errors, $user, $pass1, $pass2);
+        $oldpass = (isset($_REQUEST['wppmoldpass']) ? $_REQUEST['wppmoldpass'] : '');
+        return $this->__validateProfile($errors, $user, $pass1, $pass2, $oldpass);
     }
 
     /**
@@ -301,7 +312,7 @@ class WpPasswordPolicyManager
      * @param $pass2
      * @return mixed
      */
-    protected function __validateProfile($errors, $user, $pass1, $pass2){
+    protected function __validateProfile($errors, $user, $pass1, $pass2, $oldpass) {
         if($user){
             if(! isset($user->ID)){
                 return $errors;
@@ -366,6 +377,12 @@ class WpPasswordPolicyManager
                 if($this->IsPolicyEnabled(self::POLICY_SPECIAL)) {
                     if (!preg_match('/[_\W]/', $pass1)) {
                         $errors->add('expired_password', __('<strong>ERROR</strong>: New password must contain special characters.'));
+                        return $errors;
+                    }
+                }
+                if($this->IsPolicyEnabled(self::POLICY_OLDPASSWORD)) {
+                    if (!wp_check_password($oldpass, $crtPwd, $user->ID)) {
+                        $errors->add('expired_password', __('<strong>ERROR</strong>: Current password must be entered.'));
                         return $errors;
                     }
                 }
@@ -697,6 +714,7 @@ class WpPasswordPolicyManager
         $this->SetPolicyState(self::POLICY_MIXCASE, $this->IsPostIdent('cpt'));
         $this->SetPolicyState(self::POLICY_NUMBERS, $this->IsPostIdent('num'));
         $this->SetPolicyState(self::POLICY_SPECIAL, $this->IsPostIdent('spc'));
+        $this->SetPolicyState(self::POLICY_OLDPASSWORD, $this->IsPostIdent('opw'));
         $this->SetExemptTokens(isset($_REQUEST['ExemptTokens']) ? $_REQUEST['ExemptTokens'] : array());
         if($this->IsPostIdent('msp'))
             $this->SetMaxSamePass((int)$this->GetPostIdent('msp'));
@@ -853,6 +871,19 @@ class WpPasswordPolicyManager
                                 <input name="<?php $this->EchoIdent('spc'); ?>" type="checkbox" id="<?php $this->EchoIdent('spc'); ?>"
                                        value="1"<?php if($this->IsPolicyEnabled(self::POLICY_SPECIAL))echo ' checked="checked"'; ?>/>
                                 <?php _e('Password must contain special characters (eg: <code>.,!#$_+</code>).'); ?>
+                            </label>
+                        </fieldset>
+                    </td>
+                </tr>
+                <tr valign="top">
+                    <th scope="row"><label for="<?php $this->EchoIdent('opw'); ?>"><?php _e('Supply Old password Policy'); ?></label></th>
+                    <td>
+                        <fieldset>
+                            <legend class="screen-reader-text"><span><?php _e('Supply Old password Policy'); ?></span></legend>
+                            <label for="<?php $this->EchoIdent('opw'); ?>">
+                                <input name="<?php $this->EchoIdent('opw'); ?>" type="checkbox" id="<?php $this->EchoIdent('opw'); ?>"
+                                       value="1"<?php if($this->IsPolicyEnabled(self::POLICY_OLDPASSWORD))echo ' checked="checked"'; ?>/>
+                                <?php _e('When changing password on the profile page, the user must supply the current password.'); ?>
                             </label>
                         </fieldset>
                     </td>
