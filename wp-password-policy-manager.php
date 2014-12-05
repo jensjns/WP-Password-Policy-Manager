@@ -172,21 +172,21 @@ class WpPasswordPolicyManager
             <label for="user_pass_vfy"><?php _e('Verify Password') ?><br />
                 <input type="password" name="user_pass_vfy" id="user_pass_vfy" class="input" value="<?php echo ''; ?>" size="25" /></label>
         </p>
-        <script type="text/javascript">
-            window.wppm_ModifyForm = <?php echo json_encode(array(
-                'CurrentUserLogin' => $username,
-                'CurrentUserPass' => $password,
-                'TextOldPass' => __('Old Password'),
-                'BtnChangeAndLogin' => __('Change & Log in'),
-                'NewPasswordRules' => $this->GetPasswordRules(),
-                'NewPassRulesHead' => __('New password must...'),
-                'NewPassRulesFoot' => __('WordPress Password Policies by')
-                    . '<br/><a href="http://www.wpwhitesecurity.com/wordpress-security-plugins/wp-password-policy-manager/" target="_blank">'
-                        . __('WP Password Policy Manager')
-                    . '</a>'
-            )); ?>;
-        </script><?php
+        <?php
+
         wp_enqueue_script('front-js', $this->GetBaseUrl().'js/front.js', array('jquery'), rand(1,1234));
+        wp_localize_script('front-js', 'wppm_ModifyForm', array(
+            'CurrentUserLogin' => $username,
+            'CurrentUserPass' => $password,
+            'TextOldPass' => __('Old Password'),
+            'BtnChangeAndLogin' => __('Change & Log in'),
+            'NewPasswordRules' => $this->GetPasswordRules(),
+            'NewPassRulesHead' => __('New password must...'),
+            'NewPassRulesFoot' => __('WordPress Password Policies by')
+                . '<br/><a href="http://www.wpwhitesecurity.com/wordpress-security-plugins/wp-password-policy-manager/" target="_blank">'
+                    . __('WP Password Policy Manager')
+                . '</a>'
+        ));
     }
 
     protected $shouldModify = false;
@@ -388,19 +388,10 @@ class WpPasswordPolicyManager
     }
 
     public function ModifyWpResetForm() {
-        $fp = $this->GetBaseDir().'js/wppmpp.tmp.js';
-        if(is_file($fp)){
-            if(!@unlink($fp)){
-                file_put_contents($fp,'');
-            }
-        }
         wp_enqueue_style('wppm-reset-css', $this->GetBaseUrl() . 'css/wppm-reset.css', null, filemtime($this->GetBaseDir() . 'css/wppm-reset.css'));
-        wp_enqueue_script('wppm-reset-js', $this->GetBaseUrl() . 'js/reset.js', array('jquery'), filemtime($this->GetBaseDir() . 'js/reset.js'));
-        //#!-- Because we cannot just echo the script into the page, we're creating a temp js file to hold this setting
-        //#!-- and include it into the page using WP's functionality.
-        //#!-- this temp js file will be overwritten each time the password policies change
-        $str = 'window.wppm_ModifyForm=';
-        $str .= json_encode(array(
+        wp_enqueue_script('wppm-reset-js', $this->GetBaseUrl() . 'js/reset.js', array('jquery'), filemtime($this->GetBaseDir() . 'js/reset.js'), true);
+
+        wp_localize_script('wppm-reset-js', 'wppm_ModifyForm', array(
             'NewPasswordRules' => $this->GetPasswordRules(),
             'NewPassRulesHead' => __('New password must...'),
             'NewPassRulesFoot' => __('WordPress Password Policies by')
@@ -408,9 +399,6 @@ class WpPasswordPolicyManager
                 . __('WP Password Policy Manager')
                 . '</a>'
         ));
-        $str .= ';';
-        file_put_contents($this->GetBaseDir().'js/wppmpp.tmp.js', $str);
-        wp_enqueue_script('wppm-pwd-policies-js', $this->GetBaseUrl() . 'js/wppmpp.tmp.js', array('jquery'), filemtime($this->GetBaseDir() . 'js/wppmpp.tmp.js'));
     }
 
     public function ValidatePasswordReset( WP_Error $errors, $user ) {
