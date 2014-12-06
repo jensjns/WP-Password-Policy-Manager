@@ -385,7 +385,7 @@ class WpPasswordPolicyManager
                 }
                 if($this->IsPolicyEnabled(self::POLICY_OLDPASSWORD) && !$this->UserCanSkipOldPwdPolicy()) {
                     if (!wp_check_password($oldpass, $crtPwd, $user->ID)) {
-                        $errors->add('expired_password', __('<strong>ERROR</strong>: Current password must be entered.'));
+                        $errors->add('expired_password', __('<strong>ERROR</strong>: Old password is incorrect.'));
                         return $errors;
                     }
                 }
