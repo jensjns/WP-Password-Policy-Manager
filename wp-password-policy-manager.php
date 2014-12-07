@@ -342,6 +342,12 @@ class WpPasswordPolicyManager
                     $errors->add('expired_password', '<strong>ERROR</strong>: Both new passwords must match.');
                     return $errors;
                 }
+                $validateOldPass = ($this->IsPolicyEnabled(self::POLICY_OLDPASSWORD) && !$this->UserCanSkipOldPwdPolicy());
+                if($validateOldPass && empty($oldpass)){
+                    $errors->add('expired_password', '<strong>ERROR</strong>: Please enter the old password in the Old Password field.');
+                    return $errors;
+                }
+
                 // get the current pass
                 $crtPwd = $userInfo->user_pass;
                 if(wp_check_password($pass1, $crtPwd, $user->ID)){
@@ -383,7 +389,7 @@ class WpPasswordPolicyManager
                         return $errors;
                     }
                 }
-                if($this->IsPolicyEnabled(self::POLICY_OLDPASSWORD) && !$this->UserCanSkipOldPwdPolicy()) {
+                if($validateOldPass) {
                     if (!wp_check_password($oldpass, $crtPwd, $user->ID)) {
                         $errors->add('expired_password', __('<strong>ERROR</strong>: Old password is incorrect.'));
                         return $errors;
