@@ -267,7 +267,7 @@ class WpPasswordPolicyManager
         $rules = $this->GetPasswordRules();
         ?>
         <table class="form-table">
-            <?php if($this->IsPolicyEnabled(self::POLICY_OLDPASSWORD)) { ?>
+            <?php if($this->IsPolicyEnabled(self::POLICY_OLDPASSWORD) && !$this->UserCanSkipOldPwdPolicy()) { ?>
             <tr>
                 <th><label for="wppmoldpass"><?php _e('Old Password') ;?></label></th>
                 <td>
@@ -299,7 +299,10 @@ class WpPasswordPolicyManager
     public function ValidateUserProfilePage($errors, $update = null, $user = null){
         $pass1 = (isset($_REQUEST['pass1']) ? $_REQUEST['pass1'] : '');
         $pass2 = (isset($_REQUEST['pass2']) ? $_REQUEST['pass2'] : '');
-        $oldpass = (isset($_REQUEST['wppmoldpass']) ? $_REQUEST['wppmoldpass'] : '');
+        $oldpass = '';
+        if($this->IsPolicyEnabled(self::POLICY_OLDPASSWORD) && !$this->UserCanSkipOldPwdPolicy($user)) {
+            $oldpass = (isset($_REQUEST['wppmoldpass']) ? $_REQUEST['wppmoldpass'] : '');
+        }
         return $this->__validateProfile($errors, $user, $pass1, $pass2, $oldpass);
     }
 
@@ -312,7 +315,7 @@ class WpPasswordPolicyManager
      * @param $pass2
      * @return mixed
      */
-    protected function __validateProfile($errors, $user, $pass1, $pass2, $oldpass) {
+    protected function __validateProfile($errors, $user, $pass1, $pass2, $oldpass='') {
         if($user){
             if(! isset($user->ID)){
                 return $errors;
@@ -339,6 +342,12 @@ class WpPasswordPolicyManager
                     $errors->add('expired_password', '<strong>ERROR</strong>: Both new passwords must match.');
                     return $errors;
                 }
+                $validateOldPass = ($this->IsPolicyEnabled(self::POLICY_OLDPASSWORD) && !$this->UserCanSkipOldPwdPolicy());
+                if($validateOldPass && empty($oldpass)){
+                    $errors->add('expired_password', '<strong>ERROR</strong>: Please enter the old password in the Old Password field.');
+                    return $errors;
+                }
+
                 // get the current pass
                 $crtPwd = $userInfo->user_pass;
                 if(wp_check_password($pass1, $crtPwd, $user->ID)){
@@ -380,9 +389,9 @@ class WpPasswordPolicyManager
                         return $errors;
                     }
                 }
-                if($this->IsPolicyEnabled(self::POLICY_OLDPASSWORD)) {
+                if($validateOldPass) {
                     if (!wp_check_password($oldpass, $crtPwd, $user->ID)) {
-                        $errors->add('expired_password', __('<strong>ERROR</strong>: Current password must be entered.'));
+                        $errors->add('expired_password', __('<strong>ERROR</strong>: Old password is incorrect.'));
                         return $errors;
                     }
                 }
@@ -590,6 +599,16 @@ class WpPasswordPolicyManager
 // </editor-fold>
 
     // <editor-fold desc="Misc Functionality">
+
+    public function UserCanSkipOldPwdPolicy(){
+        $user = wp_get_current_user();
+        if($this->IsUserExemptFromPolicies($user)){
+            return true;
+        }
+        // If this is not his profile & is admin
+        return user_can($user->ID, 'manage_options');
+    }
+
     /**
      * @return string Password policy time to live as a string.
      */
